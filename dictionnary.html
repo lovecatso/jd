@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>背单词软件</title>
+    <script src="./js/vue.min.js"></script>
+    <script src="./js/vue-router.js"></script>
+    <script src="./js/dictionary.js"></script>
+    <script src="/js/mint.js"></script>
+    <style>
+        #dictionary h2{
+            text-align: center;
+        }
+       
+        body,ul,h1,h2,h3,h4,h5,p{
+            padding: 0px;
+            margin: 0px;
+        }
+        #series {
+            list-style: none;
+             margin: auto;
+             margin-top: 30px;
+        }
+        #series li{
+            padding: 10px 10px;
+        }
+        #series>li>span{
+            display: block;
+            display: flex;
+            align-items: center;
+        }
+        #series>li>span img{
+            display: inline-block;
+            margin-top: 0.1rem;
+            margin-left: 0.2rem;
+        }
+        .header{
+            height: 1.87rem;
+            font-size: 0.77rem;
+            line-height: 1.87rem;
+            background: #33a086;
+            text-align: center;
+        }
+         .currentword{
+            height: 1.88rem;
+            background: #33a086;
+        }
+        .memo-wrapper{
+            margin-top: 4rem;
+        }
+        .memo-wrapper p{
+            color: #999;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        .memo-wrapper p:not(:first-child){
+            color: #33a086;
+        }
+    </style>
+</head>
+<body>
+    <div id="dictionary">
+           <my-navbar>
+           </my-navbar>
+           <router-view></router-view>
+    </div>
+    <!--这个组件是用来选择背诵的栏目的-->
+    <template id="selectseries" >
+        <div>
+            <ul id="series">
+                <li v-for="(item,index) of lists">
+                    <span @click="changeEpisode(index)">{{index+1}}--{{item.mega}}<img src="./images/down_jt.png" alt=""></span>
+                    <ul class="episodes" v-show="episodeFlag==index+1">
+                        <li v-for="(e,index) of item.episodes" @click="gotoMemo(item.id,e.no)" >{{item.mega}}第{{e.no}}集</li>
+                    </ul>              
+                </li>
+            </ul>
+        </div>
+    </template>
+    <!--这个组件是背单词界面-->
+    <template id="panel">
+        <div>
+            <h2 class="currentword">official</h2>
+            <div class="memo-wrapper">
+                    <div class="clickgetanswer" v-show="flag==1">
+                        <p >请把英文发音和中文解释说出口</p>
+                        <p>点击屏幕显示答案</p>   
+                    </div>
+                    <div class="notes" v-show="flag==2">
+                        xxx
+                    </div>
+            </div>
+        </div>
+    </template>
+
+    <!--这个组件是顶部导航栏-->
+    <template id="navbar">
+        <header class="header">
+            <span class="header_title_text">{{navbarTitle}}</span>
+        </header>
+    </template>
+
+
+
+    <script>
+        let width = document.documentElement.clientWidth/16
+        let html = document.getElementsByTagName('html')[0]
+        html.style.fontSize = width+'px'
+        
+         //这个是选择你要背哪个系列的组件
+        let selectSeries = { 
+            template:'#selectseries', 
+            data(){
+                return {
+                    lists:MyDictionary(),
+                    episodeFlag:0
+                } 
+            },
+            methods:{
+                gotoMemo(id,no){
+                   this.$router.push({name:'memorize',params:{id,no}})
+                },
+                changeEpisode(i){
+                    if(this.episodeFlag==i+1){
+                        this.episodeFlag = 0
+                        return
+                    }
+                    this.episodeFlag = i+1
+                }
+            }
+        }
+        //这个是用来背单词的页面
+        let memorizePanel = { 
+            template:'#panel',
+            data(){
+                return {
+                    lists:MyDictionary(),//词汇库
+                    flag:1,
+                    currentTask:[], //当前要背诵的词汇任务,
+                    index:0
+
+                } 
+            },
+            methods:{
+               
+            },
+            created() {
+                //数据初始化
+                let {id,no} = this.$route.params
+                let arr = this.lists[id-1].episodes[no-1]
+                this.currentTask = arr
+                //随机从单词中抽取一个
+                this.index == (this.currentTask.length-1)
+            },
+        }
+        
+        //这个是顶部导航栏
+        let navbar = {
+            template:'#navbar',
+            data(){
+                return {
+                   
+                }
+            },
+            computed: {
+                navbarTitle(){
+                    let title = ''
+                    switch(this.$route.name){
+                        case 'home':
+                            title = '请选择您的要背诵的目录'
+                            break
+                        case 'memorize':
+                            title = '默默背单词'
+                            break    
+                    }
+                    return title
+                }
+            },
+
+            
+        }
+        Vue.component('my-navbar',navbar)
+        //配置路由
+        const router = new VueRouter({
+            routes:[{path:'/',redirect:'/home'},
+                    {path:'/home',name:'home',component:selectSeries},
+                    {path:'/memorize/:id/:no',name:'memorize',component:memorizePanel}
+                   ]
+        })
+        const vm = new Vue({
+            el:'#dictionary',
+            data:{
+                navbarTitle:'请选择您的词库'
+                },
+            router
+        })
+       
+    </script>
+</body>
+</html>
