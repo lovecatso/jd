@@ -45,9 +45,12 @@
         }
          .currentword{
             height: 1.88rem;
+            line-height: 1.88rem;
+            font-size: 0.9rem;
             background: #33a086;
+            border-top: 1px solid #33a086;
         }
-        .memo-wrapper{
+        .clickgetanswer{
             margin-top: 4rem;
         }
         .memo-wrapper p{
@@ -57,6 +60,67 @@
         }
         .memo-wrapper p:not(:first-child){
             color: #33a086;
+        }
+        .memo-wrapper .mynotes{
+            border-top: 1px solid #fff;
+            background: #33a086;
+            color:#000;
+            padding: 0.6rem 0.6rem;
+            font-size: 0.2rem;
+            text-align: left;
+        } 
+        .memo-wrapper .edefinition{
+          font-size: 0.3rem;
+        }
+        .memo-wrapper .edefinition .content{
+          min-height: 5.5rem;
+          padding: 0.6rem .6rem;
+          font-size: 0.7rem;
+        }
+        .memo-wrapper .examples{
+            font-size: 0.3rem;
+        }
+        .memo-wrapper .examples .content{
+          min-height: 5.5rem;
+          padding: 0.6rem .6rem;
+          font-size: 0.7rem;
+        }
+        .memo-wrapper .edefinition .title{
+            padding: 0rem 0.6rem;
+            background: #ccc;
+        }
+        .memo-wrapper .examples .title{
+            padding: 0rem 0.6rem;
+            background: #ccc;
+        }
+        footer{
+            width: 100%;
+            position: fixed;
+            bottom: 0.2rem;
+            padding: 0rem 0.6rem;
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+        }
+        footer a{
+            text-decoration: none;
+            display: inline-block;
+            height: 1.8rem;
+            line-height: 1.8rem;
+            width: 4rem;
+            text-align: center;
+            border-radius: 0.2rem;
+            color: #fff;
+            font-size: 0.7rem;
+        }
+        footer a.renshi{
+            background:#33a086;
+        }
+        footer a.mohu{
+            background: orange;
+        }
+        footer a.burenshi{
+            background: coral;
         }
     </style>
 </head>
@@ -82,14 +146,31 @@
     <!--这个组件是背单词界面-->
     <template id="panel">
         <div>
-            <h2 class="currentword">official</h2>
+            <h2 class="currentword">{{words[index].word}}</h2>
             <div class="memo-wrapper">
-                    <div class="clickgetanswer" v-show="flag==1">
+                    <div class="clickgetanswer" v-show="flag==1" @click="flag=2">
                         <p >请把英文发音和中文解释说出口</p>
                         <p>点击屏幕显示答案</p>   
                     </div>
                     <div class="notes" v-show="flag==2">
-                        xxx
+                        <p class="mynotes">{{words[index].notes}}</p>
+                        <div class="edefinition">
+                            <div class="title"> <span>英文解释</span></div>
+                            <div class="content">
+                                    {{words[index].edefinition}}
+                            </div>
+                        </div>
+                        <div class="examples">
+                            <div class="title"><span>经典例句</span> </div>	
+                            <div class="content">
+                                {{words[index].examples}}
+                            </div>
+                        </div>
+                        <footer @click.prevent="">
+                            <a href="" class="renshi" @click.prevent="changeWord">认识</a>
+                            <a href="" class="mohu">问题</a>
+                            <a href="" class="burenshi">不认识</a>
+                        </footer>
                     </div>
             </div>
         </div>
@@ -105,9 +186,12 @@
 
 
     <script>
+        window.onload = function(){
         let width = document.documentElement.clientWidth/16
         let html = document.getElementsByTagName('html')[0]
         html.style.fontSize = width+'px'
+        }
+        
         
          //这个是选择你要背哪个系列的组件
         let selectSeries = { 
@@ -138,21 +222,38 @@
                 return {
                     lists:MyDictionary(),//词汇库
                     flag:1,
-                    currentTask:[], //当前要背诵的词汇任务,
-                    index:0
-
-                } 
+                    index:null,
+                    words:[],
+                    phrases:[],
+                    questions:[],
+                 } 
             },
             methods:{
-               
+               //切换单词
+               changeWord(){
+                    if(this.words.length == 1){
+                       return alert('今日任务已经完成')
+                        
+                    }
+                    //先给当前的词从数组删掉
+                    this.words.splice(this.index,1)
+                    //随机产生一个下标
+                    let i = Math.floor(this.words.length*Math.random())
+                    this.index = i
+                    //把已出现的单词剔除
+                 }
             },
             created() {
                 //数据初始化
                 let {id,no} = this.$route.params
                 let arr = this.lists[id-1].episodes[no-1]
-                this.currentTask = arr
+                let {words,phrases,questions} = arr
+                this.words = words
+                this.phrases = phrases
+                this.questions = questions
                 //随机从单词中抽取一个
-                this.index == (this.currentTask.length-1)
+                this.index =Math.floor(this.words.length*Math.random())
+                
             },
         }
         
